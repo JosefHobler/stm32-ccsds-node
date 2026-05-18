@@ -9,6 +9,7 @@ station. Not a simulation.
 ## Demo
 
 ![Project Demo](assets/demo.mp4)
+assets/demo.mp4
 
 ## Architecture
 

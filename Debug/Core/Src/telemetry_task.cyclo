@@ -1,0 +1,5 @@
+../Core/Inc/app.h:27:20:app_alive	1
+../Core/Src/telemetry_task.c:19:6:tm_set_period_ms	2
+../Core/Src/telemetry_task.c:25:10:tm_get_period_ms	1
+../Core/Src/telemetry_task.c:27:13:emit_hk	3
+../Core/Src/telemetry_task.c:42:6:telemetry_task	2

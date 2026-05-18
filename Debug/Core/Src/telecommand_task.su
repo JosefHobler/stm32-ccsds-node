@@ -1,0 +1,9 @@
+../Core/Inc/app.h:27:20:app_alive	16	static
+../Drivers/CMSIS/Include/core_cm4.h:1938:34:__NVIC_SystemReset	4	static,ignoring_inline_asm
+../Core/Src/telecommand_task.c:24:6:telecommand_uart_rx_isr	24	static,ignoring_inline_asm
+../Core/Src/telecommand_task.c:32:13:send_evt	88	static
+../Core/Src/telecommand_task.c:41:13:send_ack	24	static
+../Core/Src/telecommand_task.c:47:13:send_version	64	static
+../Core/Src/telecommand_task.c:62:13:dispatch	24	static
+../Core/Src/telecommand_task.c:111:22:framed_total	16	static
+../Core/Src/telecommand_task.c:116:6:telecommand_task	320	static,ignoring_inline_asm

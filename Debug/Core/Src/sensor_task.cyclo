@@ -1,0 +1,4 @@
+../Core/Inc/app.h:27:20:app_alive	1
+../Core/Src/sensor_task.c:18:17:adc_read_channel	4
+../Core/Src/sensor_task.c:36:6:sensor_pack_be	1
+../Core/Src/sensor_task.c:55:6:sensor_task	3

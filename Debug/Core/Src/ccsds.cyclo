@@ -1,0 +1,3 @@
+../Core/Src/ccsds.c:5:10:ccsds_crc16	4
+../Core/Src/ccsds.c:17:8:ccsds_encode	6
+../Core/Src/ccsds.c:46:6:ccsds_decode	8

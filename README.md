@@ -8,7 +8,7 @@ station. Not a simulation.
 
 ## Demo
 
-<video src="./assets/demo.mp4" controls="controls" width="100%"></video>
+![Project Demo](assets/demo.gif)
 
 ## Architecture
 

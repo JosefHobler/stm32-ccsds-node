@@ -8,7 +8,7 @@ station. Not a simulation.
 
 ## Demo
 
-https://github.com/user-attachments/assets/550f46d6-8cd1-43e6-8806-1599b2604386
+<video src="assets/demo.mp4" controls="controls" width="100%"></video>
 
 ## Architecture
 

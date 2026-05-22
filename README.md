@@ -9,8 +9,6 @@ station. Not a simulation.
 ## Demo
 
 https://github.com/user-attachments/assets/a63223f6-553e-4c11-865a-05b3f080bbff
-<br/>
-https://github.com/user-attachments/assets/25006e40-8566-46bf-9e0b-9726b537ecd3
 
 ## Architecture
 

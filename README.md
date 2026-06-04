@@ -116,6 +116,6 @@ Works with 10 s HK + occasional acks. But if you set `rate` past a few Hz
 with bigger payloads, switch to `HAL_UART_Transmit_DMA` + a TxCplt
 semaphore.
 
-**Encoder/Decoder is host-testable:** `ccsds.c` has zero HAL dependencies. C and Python implementations are byte-identical.
+**Encoder/Decoder is host-testable:** `ccsds.c` has zero HAL dependencies. C and Python implementations are identical.
 
 ## As soon as I finish my exams, I will add new features to this project

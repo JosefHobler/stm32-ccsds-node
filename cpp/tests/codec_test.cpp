@@ -83,3 +83,39 @@ TEST_CASE("crc16 validates a real HK fixture", "[crc][fixture]") {
             static_cast<std::uint16_t>(hk_tm_frame[n - 1]));
     REQUIRE(ccsds::crc16(header_and_payload) == expected);
 }
+
+// --- encode / decode smoke tests -----------------------------------------
+//
+// Step 6 just validates the basic shape — Step 7 lands the full conformance
+// battery (corruption, truncation, byte-identical re-encode, ...).
+
+TEST_CASE("decode parses the PING TC fixture", "[decode][fixture]") {
+    using namespace ccsds::fixtures;
+    const auto pkt = ccsds::decode(as_byte_span(ping_tc_frame));
+    REQUIRE(pkt.has_value());
+    REQUIRE(pkt->type      == ccsds::PacketType::TC);
+    REQUIRE(pkt->apid      == ccsds::Apid::CMD);
+    REQUIRE(pkt->seq_flags == ccsds::SeqFlags::UNSEGMENTED);
+    REQUIRE(pkt->seq_count == 1);
+    REQUIRE(pkt->payload.size() == 1);
+    REQUIRE(std::to_integer<std::uint8_t>(pkt->payload[0]) ==
+            static_cast<std::uint8_t>(ccsds::Command::PING));
+}
+
+TEST_CASE("encode produces a CRC-valid frame", "[encode]") {
+    ccsds::Packet p;
+    p.type      = ccsds::PacketType::TC;
+    p.apid      = ccsds::Apid::CMD;
+    p.seq_flags = ccsds::SeqFlags::UNSEGMENTED;
+    p.seq_count = 1;
+    p.payload   = {std::byte{0x01}};  // CMD_PING
+
+    const auto frame = ccsds::encode(p);
+    REQUIRE(frame.size() == 9);
+
+    // Decoding our own encode must round-trip cleanly.
+    const auto round = ccsds::decode(frame);
+    REQUIRE(round.has_value());
+    REQUIRE(round->payload == p.payload);
+    REQUIRE(round->seq_count == p.seq_count);
+}

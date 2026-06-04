@@ -38,6 +38,7 @@ if(BUILD_TESTING)
     FetchContent_MakeAvailable(Catch2)
 
     add_executable(codec_test tests/codec_test.cpp)
+    target_include_directories(codec_test PRIVATE tests)
     target_link_libraries(codec_test PRIVATE ccsds Catch2::Catch2WithMain)
 
     list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)

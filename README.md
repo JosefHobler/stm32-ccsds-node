@@ -3,8 +3,7 @@
 CCSDS Space Packet TM/TC over UART. STM32F411RE + FreeRTOS on one end,
 Python REPL on the other.
 
-End-to-end CCSDS framing on a real MCU, with a ground
-station. Not a simulation.
+End-to-end CCSDS framing on a real MCU, with a ground station.
 
 ## Demo
 

@@ -32,7 +32,9 @@ Packet ID (2)  | Packet Sequence Control(2) | Packet Data Length(2) | payload | 
               version (0)
 ```
 
-CRC is CCITT/XMODEM over header + payload.
+CRC is **CRC-16/CCITT-FALSE** (a.k.a. CRC-16/IBM-3740) over header + payload:
+poly `0x1021`, init `0xFFFF`, refin `false`, refout `false`, xorout `0x0000`,
+check value `0x29B1` for the ASCII string `"123456789"`.
 Framing on a raw stream uses the length field, with 1-byte slip on
 CRC failure to resync. False positives during slip are rare (roughly 1 in 65,536) with CCITT.
 

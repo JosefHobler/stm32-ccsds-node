@@ -1,7 +1,9 @@
 #include "ccsds.h"
 #include <string.h>
 
-/* CRC-16-CCITT (XMODEM): poly 0x1021, init 0xFFFF, no reflect, no xorout. */
+/* CRC-16/CCITT-FALSE (a.k.a. CRC-16/IBM-3740):
+ *   poly 0x1021, init 0xFFFF, refin false, refout false, xorout 0x0000.
+ *   check value for "123456789" = 0x29B1. */
 uint16_t ccsds_crc16(const uint8_t *data, size_t len)
 {
     uint16_t crc = 0xFFFFu;

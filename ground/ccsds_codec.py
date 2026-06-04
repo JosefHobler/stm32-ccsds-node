@@ -2,7 +2,9 @@
 
     [ id(2) | seq(2) | len(2) | payload | crc16(2) ]
 
-CRC: CCITT/XMODEM (poly 0x1021, init 0xFFFF, no reflect, no xorout).
+CRC: CRC-16/CCITT-FALSE (a.k.a. CRC-16/IBM-3740).
+     poly 0x1021, init 0xFFFF, refin false, refout false, xorout 0x0000.
+     Check value for "123456789" = 0x29B1.
 """
 from __future__ import annotations
 

@@ -154,3 +154,30 @@ jobs:
       - name: nats-server log on failure
         if: failure()
         run: cat nats-server.log || true
+
+  fuzz:
+    name: fuzz (libFuzzer, 60s smoke)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build clang
+
+      - name: Configure (fuzz build)
+        env:
+          CC:  clang
+          CXX: clang++
+        run: cmake -S cpp -B cpp/build-fuzz -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCCSDS_BUILD_FUZZ=ON
+
+      - name: Build fuzz_decode
+        run: cmake --build cpp/build-fuzz --target fuzz_decode
+
+      - name: Run libFuzzer for 60 seconds
+        run: |
+          ./cpp/build-fuzz/fuzz_decode \
+            -max_total_time=60 \
+            -print_final_stats=1 \
+            -timeout=10

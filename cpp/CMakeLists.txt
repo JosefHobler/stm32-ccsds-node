@@ -15,6 +15,7 @@ endif()
 
 option(CCSDS_WITH_NATS  "Build the NATS TM/TC bridge (requires cnats)." OFF)
 option(CCSDS_SANITIZE   "Enable Address+UndefinedBehavior sanitizers."  OFF)
+option(CCSDS_BUILD_FUZZ "Build the libFuzzer entry point (clang only)." OFF)
 
 if(MSVC)
     add_compile_options(/W4 /permissive-)
@@ -102,4 +103,20 @@ if(BUILD_TESTING)
     list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
     include(Catch)
     catch_discover_tests(codec_test)
+endif()
+
+# --- fuzz target (libFuzzer; clang only) -----------------------------------
+if(CCSDS_BUILD_FUZZ)
+    if(NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        message(FATAL_ERROR
+            "CCSDS_BUILD_FUZZ=ON requires clang/clang++ (libFuzzer is "
+            "shipped as part of clang's compiler-rt). Re-configure with "
+            "-DCMAKE_CXX_COMPILER=clang++.")
+    endif()
+    add_executable(fuzz_decode fuzz/fuzz_decode.cpp)
+    target_link_libraries(fuzz_decode PRIVATE ccsds)
+    target_compile_options(fuzz_decode PRIVATE
+        -fsanitize=fuzzer,address,undefined -fno-omit-frame-pointer)
+    target_link_options(fuzz_decode PRIVATE
+        -fsanitize=fuzzer,address,undefined)
 endif()

@@ -1,11 +1,5 @@
-"""CCSDS Space Packet codec. Mirrors firmware/Core/Src/ccsds.c
+# CCSDS Space Packet codec. Mirrors firmware/Core/Src/ccsds
 
-    [ id(2) | seq(2) | len(2) | payload | crc16(2) ]
-
-CRC: CRC-16/CCITT-FALSE (a.k.a. CRC-16/IBM-3740).
-     poly 0x1021, init 0xFFFF, refin false, refout false, xorout 0x0000.
-     Check value for "123456789" = 0x29B1.
-"""
 from __future__ import annotations
 
 import struct
@@ -43,9 +37,9 @@ def crc16_ccitt(data: bytes) -> int:
 @dataclass
 class Packet:
     apid: int
-    pkt_type: int          # 0=TM, 1=TC
+    pkt_type: int         
     sec_hdr_flag: int
-    seq: int               # 14-bit
+    seq: int             
     payload: bytes
 
 
@@ -62,7 +56,7 @@ def encode(apid: int, pkt_type: int, seq: int, payload: bytes) -> bytes:
 
 
 def decode(buf: bytes) -> Optional[Packet]:
-    """Strict decode. None on any error (length, version, CRC, ...)."""
+ 
     if len(buf) < PRIMARY_HDR_LEN + CRC_LEN:
         return None
 
@@ -103,7 +97,7 @@ def decode_hk(payload: bytes) -> Optional[dict]:
 
 
 def decode_ack(payload: bytes) -> Optional[dict]:
-    """APID 0x065 ack. At least 4 bytes; anything after is optional info (e.g. version)."""
+   
     if len(payload) < 4:
         return None
     cmd, status, seq_hi, seq_lo = payload[:4]

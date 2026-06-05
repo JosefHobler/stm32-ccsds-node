@@ -22,6 +22,7 @@ endif()
 # --- ccsds library ---------------------------------------------------------
 add_library(ccsds STATIC
     src/codec.cpp
+    src/framer.cpp
 )
 target_include_directories(ccsds PUBLIC include)
 target_compile_features(ccsds PUBLIC cxx_std_20)
@@ -40,6 +41,7 @@ if(BUILD_TESTING)
     add_executable(codec_test
         tests/codec_test.cpp
         tests/conformance_test.cpp
+        tests/framer_test.cpp
     )
     target_include_directories(codec_test PRIVATE tests)
     target_link_libraries(codec_test PRIVATE ccsds Catch2::Catch2WithMain)

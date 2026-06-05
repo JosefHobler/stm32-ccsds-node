@@ -37,7 +37,10 @@ if(BUILD_TESTING)
     )
     FetchContent_MakeAvailable(Catch2)
 
-    add_executable(codec_test tests/codec_test.cpp)
+    add_executable(codec_test
+        tests/codec_test.cpp
+        tests/conformance_test.cpp
+    )
     target_include_directories(codec_test PRIVATE tests)
     target_link_libraries(codec_test PRIVATE ccsds Catch2::Catch2WithMain)
 

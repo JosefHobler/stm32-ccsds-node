@@ -14,9 +14,14 @@ std::uint16_t crc16(std::span<const std::byte> data) noexcept {
         const auto in = std::to_integer<std::uint16_t>(byte);
         crc = static_cast<std::uint16_t>(crc ^ static_cast<std::uint16_t>(in << 8));
         for (int b = 0; b < 8; ++b) {
+            // Promote crc to unsigned before the shift so the `^ 0x1021u`
+            // and the cast back to uint16_t don't trip clang's stricter
+            // -Wsign-conversion (the int-promoted result of `crc << 1`
+            // would otherwise mix with an unsigned literal).
+            const unsigned shifted = static_cast<unsigned>(crc) << 1;
             crc = (crc & 0x8000u)
-                      ? static_cast<std::uint16_t>((crc << 1) ^ 0x1021u)
-                      : static_cast<std::uint16_t>(crc << 1);
+                      ? static_cast<std::uint16_t>(shifted ^ 0x1021u)
+                      : static_cast<std::uint16_t>(shifted);
         }
     }
     return crc;
@@ -122,8 +127,11 @@ std::optional<Packet> decode(std::span<const std::byte> frame) noexcept {
     out.seq_count = static_cast<std::uint16_t>(pkt_seq & kSeqCountMask);
 
     const std::size_t payload_len = data_field - kCrcLen;
-    out.payload.assign(frame.begin() + kPrimaryHeaderLen,
-                       frame.begin() + kPrimaryHeaderLen + payload_len);
+    // span::iterator's operator+ takes a signed difference_type;
+    // explicit ptrdiff_t casts keep clang's -Wsign-conversion quiet.
+    const auto hdr  = static_cast<std::ptrdiff_t>(kPrimaryHeaderLen);
+    const auto tail = static_cast<std::ptrdiff_t>(kPrimaryHeaderLen + payload_len);
+    out.payload.assign(frame.begin() + hdr, frame.begin() + tail);
     return out;
 }
 

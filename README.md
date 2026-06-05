@@ -5,6 +5,23 @@ Python REPL on the other.
 
 End-to-end CCSDS framing on a real MCU, with a ground station.
 
+## C++ Codec, NATS Bridge, and Conformance Testing
+
+The `cpp/` folder contains a host-side **modern C++20** implementation of
+the CCSDS packet codec, a streaming framer, and a small NATS TM/TC
+bridge. The C firmware codec, Python ground-station codec, and C++ codec
+are tested against shared conformance vectors to verify byte-identical
+behavior for representative TM/TC frames. Tests run under
+**ASan/UBSan** in CI and there is a libFuzzer entry point for the
+decoder and stream framer.
+
+The C++ implementation uses typed packet structures, `enum class`
+APIDs/commands, `std::span`, `std::byte`, `std::optional`, RAII for the
+NATS handles, CMake-based tests via Catch2 + nlohmann/json (FetchContent),
+and GitHub Actions CI.
+
+See [`cpp/DESIGN.md`](cpp/DESIGN.md) for the engineering writeup.
+
 ## Demo
 
 https://github.com/user-attachments/assets/a63223f6-553e-4c11-865a-05b3f080bbff
@@ -83,7 +100,10 @@ The TM task runs a 500 ms heartbeat loop and only emits packets when
 ```
 Core/Inc/                firmware headers
 Core/Src/                firmware sources  (app, ccsds, sensor_task, tm, tc)
-ground/                  client-side ground station (gs.py, ccsds_codec.py)
+ground/                  client-side ground station (gs.py, ccsds_codec.py,
+                         generate_fixtures.py for the C++ differential test)
+cpp/                     host-side C++20 CCSDS codec, framer, NATS bridge,
+                         tests, fixtures, CMake build
 ccsds_node.ioc           CubeMX project
 ```
 
@@ -105,6 +125,18 @@ Commands:
 > version
 ```
 
+**C++ codec (host).**
+```
+cmake -S cpp -B cpp/build
+cmake --build cpp/build
+ctest --test-dir cpp/build
+```
+
+Build the optional NATS bridge with `-DCCSDS_WITH_NATS=ON` (needs a
+local `nats-server`, configured via the `NATS_URL` env var for tests).
+Build with sanitizers via `-DCCSDS_SANITIZE=ON` (clang recommended);
+build the libFuzzer target via `-DCCSDS_BUILD_FUZZ=ON` (clang only).
+
 ## Challenges & Solutions
 
 **IWDG vs. TM period:** Earlier version had `vTaskDelayUntil(period_ms)`
@@ -118,6 +150,9 @@ Works with 10 s HK + occasional acks. But if you set `rate` past a few Hz
 with bigger payloads, switch to `HAL_UART_Transmit_DMA` + a TxCplt
 semaphore.
 
-**Encoder/Decoder is host-testable:** `ccsds.c` has zero HAL dependencies. C and Python implementations are identical.
+**Encoder/Decoder is host-testable:** `ccsds.c` has zero HAL dependencies.
+The C firmware, Python ground-station, and C++ host-side codecs are
+verified byte-identical against shared conformance vectors (`cpp/tests/`)
+plus 200 differential fixtures generated from the Python reference.
 
 ## As soon as I finish my exams, I will add new features to this project

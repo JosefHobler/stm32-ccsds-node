@@ -65,6 +65,10 @@ TEST_CASE("NATS bridge: tc.raw -> decode -> tc.parsed round trip",
         natsSubscription* s{};
         ~SubGuard() { if (s) { natsSubscription_Unsubscribe(s); natsSubscription_Destroy(s); } }
     } sync_sub{sync_sub_raw};
+    // Round-trip the SUB to the server before the bridge has a chance to
+    // publish on tc.parsed — otherwise the parsed message can arrive
+    // before our listener's subscription is registered and be dropped.
+    REQUIRE(natsConnection_Flush(listener.c) == NATS_OK);
 
     // Publish PING TC raw frame on tc.raw via a fresh publisher connection
     // — exercises the bridge's subscribe path end-to-end.

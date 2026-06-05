@@ -112,6 +112,11 @@ void NatsBridge::bridge(std::string_view raw_subject,
                                    this),
           "Subscribe");
     sub_.reset(raw_sub);
+    // Force the SUB to round-trip to the server before returning, so a
+    // caller that publishes on the same subject immediately after this
+    // doesn't race the subscription registration (NATS doesn't queue
+    // messages for not-yet-registered subjects — they're just dropped).
+    check(natsConnection_Flush(conn_.get()), "Flush (subscribe)");
 }
 
 void NatsBridge::publish_raw(std::string_view subject,

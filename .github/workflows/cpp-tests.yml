@@ -97,3 +97,60 @@ jobs:
       - name: nats-server log on failure
         if: failure()
         run: cat nats-server.log || true
+
+  sanitizers:
+    name: sanitizers (ASan+UBSan)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build clang curl tar
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Regenerate differential fixtures
+        run: python ground/generate_fixtures.py
+
+      - name: Install nats-server
+        run: |
+          NATS_VERSION=v2.10.20
+          curl -sL "https://github.com/nats-io/nats-server/releases/download/${NATS_VERSION}/nats-server-${NATS_VERSION}-linux-amd64.tar.gz" \
+            | tar -xz
+          sudo mv "nats-server-${NATS_VERSION}-linux-amd64/nats-server" /usr/local/bin/
+
+      - name: Start nats-server (background)
+        run: |
+          nats-server -p 4222 > nats-server.log 2>&1 &
+          for i in $(seq 1 20); do
+            (echo > /dev/tcp/127.0.0.1/4222) >/dev/null 2>&1 && break
+            sleep 0.2
+          done
+
+      - name: Configure (sanitized + NATS)
+        env:
+          CC:  clang
+          CXX: clang++
+        run: cmake -S cpp -B cpp/build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCCSDS_SANITIZE=ON -DCCSDS_WITH_NATS=ON
+
+      - name: Build
+        run: cmake --build cpp/build
+
+      - name: Test (with ASan/UBSan)
+        env:
+          NATS_URL: nats://127.0.0.1:4222
+          # detect_leaks=0: cnats holds long-lived globals/threadlocals that
+          # LSan flags as leaks at process exit. The bugs that actually
+          # matter (use-after-free, heap-buffer-overflow, UB) are still
+          # caught — these are the load-bearing checks for a packet parser.
+          ASAN_OPTIONS:  detect_leaks=0:abort_on_error=1:strict_string_checks=1
+          UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
+        run: ctest --test-dir cpp/build --output-on-failure
+
+      - name: nats-server log on failure
+        if: failure()
+        run: cat nats-server.log || true

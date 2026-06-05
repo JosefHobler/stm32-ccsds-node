@@ -5,10 +5,14 @@ on:
     branches: [master, main]
     paths:
       - 'cpp/**'
+      - 'ground/ccsds_codec.py'
+      - 'ground/generate_fixtures.py'
       - '.github/workflows/cpp-tests.yml'
   pull_request:
     paths:
       - 'cpp/**'
+      - 'ground/ccsds_codec.py'
+      - 'ground/generate_fixtures.py'
       - '.github/workflows/cpp-tests.yml'
   workflow_dispatch:
 
@@ -30,6 +34,13 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake ninja-build g++
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Regenerate differential fixtures
+        run: python ground/generate_fixtures.py
 
       - name: Configure
         run: cmake -S cpp -B cpp/build -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}

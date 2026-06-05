@@ -38,13 +38,25 @@ if(BUILD_TESTING)
     )
     FetchContent_MakeAvailable(Catch2)
 
+    FetchContent_Declare(
+        nlohmann_json
+        GIT_REPOSITORY https://github.com/nlohmann/json.git
+        GIT_TAG        v3.11.3
+    )
+    FetchContent_MakeAvailable(nlohmann_json)
+
     add_executable(codec_test
         tests/codec_test.cpp
         tests/conformance_test.cpp
         tests/framer_test.cpp
+        tests/differential_test.cpp
     )
     target_include_directories(codec_test PRIVATE tests)
-    target_link_libraries(codec_test PRIVATE ccsds Catch2::Catch2WithMain)
+    target_compile_definitions(codec_test PRIVATE
+        CCSDS_GENERATED_FIXTURES_JSON="${CMAKE_CURRENT_SOURCE_DIR}/tests/generated_fixtures.json"
+    )
+    target_link_libraries(codec_test
+        PRIVATE ccsds Catch2::Catch2WithMain nlohmann_json::nlohmann_json)
 
     list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
     include(Catch)

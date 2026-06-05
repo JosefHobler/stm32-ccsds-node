@@ -125,7 +125,13 @@ if(BUILD_TESTING)
 
     list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
     include(Catch)
-    catch_discover_tests(codec_test)
+    # Label our tests so CI can filter them with `ctest -L ccsds`. cnats's
+    # CMakeLists registers ~300 of its own tests (Test_StanXxx, ...) via
+    # add_test() at configure time. EXCLUDE_FROM_ALL stops the testsuite
+    # binary from being *built*, but cnats's add_test() calls already ran,
+    # so ctest will otherwise try to launch a binary that doesn't exist.
+    catch_discover_tests(codec_test
+        PROPERTIES LABELS "ccsds")
 endif()
 
 # --- fuzz target (libFuzzer; clang only) -----------------------------------

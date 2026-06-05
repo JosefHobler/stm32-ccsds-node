@@ -18,19 +18,17 @@ on:
 
 jobs:
   build-and-test:
-    name: ${{ matrix.os }} / ${{ matrix.build_type }}
-    runs-on: ${{ matrix.os }}
+    name: core / ${{ matrix.build_type }}
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
         build_type: [Release, Debug]
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install build dependencies (Linux)
-        if: runner.os == 'Linux'
+      - name: Install build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake ninja-build g++
@@ -50,3 +48,52 @@ jobs:
 
       - name: Test
         run: ctest --test-dir cpp/build --output-on-failure -C ${{ matrix.build_type }}
+
+  nats-integration:
+    name: nats-bridge / Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build g++ curl tar
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Regenerate differential fixtures
+        run: python ground/generate_fixtures.py
+
+      - name: Install nats-server
+        run: |
+          NATS_VERSION=v2.10.20
+          curl -sL "https://github.com/nats-io/nats-server/releases/download/${NATS_VERSION}/nats-server-${NATS_VERSION}-linux-amd64.tar.gz" \
+            | tar -xz
+          sudo mv "nats-server-${NATS_VERSION}-linux-amd64/nats-server" /usr/local/bin/
+
+      - name: Start nats-server (background)
+        run: |
+          nats-server -p 4222 > nats-server.log 2>&1 &
+          # Give the server a moment to bind.
+          for i in $(seq 1 20); do
+            (echo > /dev/tcp/127.0.0.1/4222) >/dev/null 2>&1 && break
+            sleep 0.2
+          done
+
+      - name: Configure (with NATS)
+        run: cmake -S cpp -B cpp/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCCSDS_WITH_NATS=ON
+
+      - name: Build
+        run: cmake --build cpp/build
+
+      - name: Test
+        env:
+          NATS_URL: nats://127.0.0.1:4222
+        run: ctest --test-dir cpp/build --output-on-failure
+
+      - name: nats-server log on failure
+        if: failure()
+        run: cat nats-server.log || true

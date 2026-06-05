@@ -8,7 +8,7 @@
 #include "ccsds/nats_bridge.hpp"
 #include "fixtures.hpp"
 
-#include <nats/nats.h>
+#include <nats.h>
 #include <nlohmann/json.hpp>
 
 #include <array>

@@ -92,10 +92,6 @@ jobs:
       - name: Test
         env:
           NATS_URL: nats://127.0.0.1:4222
-        # -L ccsds: cnats's CMakeLists registers ~300 of its own tests
-        # via add_test(). EXCLUDE_FROM_ALL stops its testsuite binary
-        # from being built but doesn't unregister the test entries, so
-        # ctest needs to be told which subset is ours.
         run: ctest --test-dir cpp/build --output-on-failure -L ccsds
 
       - name: nats-server log on failure
@@ -147,13 +143,8 @@ jobs:
       - name: Test (with ASan/UBSan)
         env:
           NATS_URL: nats://127.0.0.1:4222
-          # detect_leaks=0: cnats holds long-lived globals/threadlocals that
-          # LSan flags as leaks at process exit. The bugs that actually
-          # matter (use-after-free, heap-buffer-overflow, UB) are still
-          # caught — these are the load-bearing checks for a packet parser.
           ASAN_OPTIONS:  detect_leaks=0:abort_on_error=1:strict_string_checks=1
           UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
-        # -L ccsds: see explanation in the nats-integration job above.
         run: ctest --test-dir cpp/build --output-on-failure -L ccsds
 
       - name: nats-server log on failure

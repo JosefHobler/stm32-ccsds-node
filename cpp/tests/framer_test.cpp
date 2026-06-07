@@ -24,7 +24,7 @@ std::span<const std::byte> view(const std::vector<std::byte>& v) {
     return std::span<const std::byte>(v.data(), v.size());
 }
 
-}  // namespace
+}  
 
 TEST_CASE("framer: one complete frame in one push", "[framer]") {
     ccsds::Framer f;
@@ -42,13 +42,10 @@ TEST_CASE("framer: a frame split across two pushes is recovered",
           "[framer][partial]") {
     ccsds::Framer f;
     const auto frame = to_bytes(ccsds::fixtures::hk_tm_frame);
-    // First push: less than a full primary header — framer must hold.
     f.push(std::span<const std::byte>(frame.data(), 3));
     REQUIRE(f.next() == std::nullopt);
-    // Second push: less than the full frame still — framer must hold.
     f.push(std::span<const std::byte>(frame.data() + 3, 10));
     REQUIRE(f.next() == std::nullopt);
-    // Final tail: full frame now available.
     f.push(std::span<const std::byte>(frame.data() + 13,
                                       frame.size() - 13));
     const auto pkt = f.next();
@@ -60,7 +57,6 @@ TEST_CASE("framer: a frame split across two pushes is recovered",
 TEST_CASE("framer: garbage prefix is skipped byte-by-byte", "[framer][slip]") {
     ccsds::Framer f;
     std::vector<std::byte> stream;
-    // Three bytes of garbage in front of a real frame.
     stream.push_back(std::byte{0xAA});
     stream.push_back(std::byte{0x55});
     stream.push_back(std::byte{0xFF});
@@ -71,7 +67,7 @@ TEST_CASE("framer: garbage prefix is skipped byte-by-byte", "[framer][slip]") {
     const auto pkt = f.next();
     REQUIRE(pkt.has_value());
     REQUIRE(pkt->apid == ccsds::Apid::CMD);
-    REQUIRE(f.slipped() >= 1);  // at least one byte slipped
+    REQUIRE(f.slipped() >= 1);
     REQUIRE(f.next() == std::nullopt);
 }
 
@@ -91,7 +87,7 @@ TEST_CASE("framer: corrupted frame followed by a valid frame",
     const auto pkt = f.next();
     REQUIRE(pkt.has_value());
     REQUIRE(pkt->apid == ccsds::Apid::CMD);
-    REQUIRE(pkt->seq_count == 2);  // SET_TM_RATE fixture's seq
+    REQUIRE(pkt->seq_count == 2);
     REQUIRE(f.slipped() >= 1);
 }
 
@@ -121,12 +117,10 @@ TEST_CASE("framer: truncated frame is held until more bytes arrive",
           "[framer][partial]") {
     ccsds::Framer f;
     const auto frame = to_bytes(ccsds::fixtures::set_tm_rate_tc_frame);
-    // All bytes except the very last — length field promises one more.
     f.push(std::span<const std::byte>(frame.data(), frame.size() - 1));
     REQUIRE(f.next() == std::nullopt);
     REQUIRE(f.buffered() == frame.size() - 1);
 
-    // Final byte arrives — packet pops out.
     f.push(std::span<const std::byte>(frame.data() + frame.size() - 1, 1));
     const auto pkt = f.next();
     REQUIRE(pkt.has_value());

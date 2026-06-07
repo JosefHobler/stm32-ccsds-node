@@ -1,13 +1,3 @@
-// Differential test: the Python codec (which mirrors the firmware) is
-// driven over hundreds of randomly-shaped packets, and for each one the
-// C++ codec must
-//   (a) decode the resulting frame into the same logical packet, and
-//   (b) re-encode it to the exact same wire bytes.
-//
-// This is stronger than the hand-picked fixtures in conformance_test.cpp
-// because it sweeps APIDs, payload sizes, and sequence counts the
-// hand-picked set never touches. See ground/generate_fixtures.py for the
-// generator.
 #include <catch2/catch_test_macros.hpp>
 
 #include "ccsds/codec.hpp"
@@ -47,9 +37,9 @@ std::vector<std::byte> from_hex(const std::string& s) {
     return out;
 }
 
-}  // namespace
+}  
 
-TEST_CASE("differential: decode-re-encode of Python-generated frames "
+TEST_CASE("decode-re-encode of Python-generated frames "
           "is byte-identical",
           "[differential][cross-impl]") {
     std::ifstream f(CCSDS_GENERATED_FIXTURES_JSON);

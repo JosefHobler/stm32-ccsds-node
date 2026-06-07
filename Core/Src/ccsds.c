@@ -1,9 +1,6 @@
 #include "ccsds.h"
 #include <string.h>
 
-/* CRC-16/CCITT-FALSE (a.k.a. CRC-16/IBM-3740):
- *   poly 0x1021, init 0xFFFF, refin false, refout false, xorout 0x0000.
- *   check value for "123456789" = 0x29B1. */
 uint16_t ccsds_crc16(const uint8_t *data, size_t len)
 {
     uint16_t crc = 0xFFFFu;
@@ -56,7 +53,7 @@ bool ccsds_decode(const uint8_t *in, size_t in_len, ccsds_packet_t *out)
 
     if (((pkt_id >> 13) & 0x7u) != CCSDS_VERSION) return false;
 
-    size_t data_field = (size_t)pkt_len + 1u;          /* includes CRC */
+    size_t data_field = (size_t)pkt_len + 1u;         
     if (data_field < CCSDS_CRC_LEN)                       return false;
     if (CCSDS_PRIMARY_HDR_LEN + data_field > in_len)      return false;
 

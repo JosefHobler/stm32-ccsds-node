@@ -6,8 +6,6 @@
 #include <sstream>
 #include <string>
 
-// Forward decl so NatsBridge::bridge() below can take this function's
-// address; the definition lives below the ccsds namespace.
 extern "C" void ccsds_nats_on_raw_message_thunk(natsConnection* nc,
                                                 natsSubscription* sub,
                                                 natsMsg* msg,
@@ -51,7 +49,7 @@ std::string to_hex(std::span<const std::byte> bytes) {
     return out;
 }
 
-}  // namespace
+}  
 
 NatsBridge::NatsBridge(const std::string& url) {
     natsConnection* raw = nullptr;
@@ -112,10 +110,6 @@ void NatsBridge::bridge(std::string_view raw_subject,
                                    this),
           "Subscribe");
     sub_.reset(raw_sub);
-    // Force the SUB to round-trip to the server before returning, so a
-    // caller that publishes on the same subject immediately after this
-    // doesn't race the subscription registration (NATS doesn't queue
-    // messages for not-yet-registered subjects — they're just dropped).
     check(natsConnection_Flush(conn_.get()), "Flush (subscribe)");
 }
 
@@ -137,10 +131,8 @@ void NatsBridge::publish_parsed(std::string_view subject, const Packet& pkt) {
     check(natsConnection_Flush(conn_.get()), "Flush (parsed)");
 }
 
-}  // namespace ccsds
+}  
 
-// extern "C" thunk: cnats expects a C function pointer for the message
-// handler. Forwards to the static member, which holds the real logic.
 extern "C" void ccsds_nats_on_raw_message_thunk(natsConnection* nc,
                                                 natsSubscription* sub,
                                                 natsMsg* msg,

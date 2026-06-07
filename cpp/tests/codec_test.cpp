@@ -11,7 +11,6 @@
 
 namespace {
 
-// Reinterpret a uint8_t array as a span<const std::byte> for the CRC API.
 template <std::size_t N>
 std::span<const std::byte> as_byte_span(
     const std::array<std::uint8_t, N>& a) {
@@ -24,7 +23,7 @@ std::span<const std::byte> as_byte_span(std::string_view s) {
         reinterpret_cast<const std::byte*>(s.data()), s.size());
 }
 
-}  // namespace
+}  
 
 TEST_CASE("interface contract: enum values", "[contract]") {
     REQUIRE(static_cast<std::uint8_t>(ccsds::PacketType::TM) == 0);
@@ -44,36 +43,25 @@ TEST_CASE("interface contract: enum values", "[contract]") {
     REQUIRE(static_cast<std::uint8_t>(ccsds::SeqFlags::UNSEGMENTED) == 0b11);
 }
 
-TEST_CASE("interface contract: wire-format sizes", "[contract]") {
+TEST_CASE("wire-format sizes", "[contract]") {
     REQUIRE(ccsds::kPrimaryHeaderLen == 6);
     REQUIRE(ccsds::kCrcLen           == 2);
     REQUIRE(ccsds::kMinFrameLen      == 8);
     REQUIRE(ccsds::kMaxFrameLen      == 256);
 }
 
-// --- CRC ------------------------------------------------------------------
-//
-// CRC-16/CCITT-FALSE conformance: the RevEng catalogue's published check
-// value for the variant is 0x29B1 over the ASCII string "123456789".
-// Pinning it here means any future change to the CRC implementation that
-// silently picks a different variant (XMODEM, KERMIT, ...) fails CI
-// loudly instead of producing frames the firmware rejects.
-
 TEST_CASE("crc16 check value", "[crc][conformance]") {
     REQUIRE(ccsds::crc16(as_byte_span("123456789")) == 0x29B1);
 }
 
 TEST_CASE("crc16 known edge cases", "[crc]") {
-    // Initial register, never xored with anything, returns 0xFFFF.
     REQUIRE(ccsds::crc16(std::span<const std::byte>{}) == 0xFFFF);
-    // Single zero byte — independently computed reference.
     constexpr std::array<std::uint8_t, 1> one_zero{0x00};
     REQUIRE(ccsds::crc16(as_byte_span(one_zero)) == 0xE1F0);
 }
 
 TEST_CASE("crc16 validates a real HK fixture", "[crc][fixture]") {
     using namespace ccsds::fixtures;
-    // The last two bytes of every fixture are the CRC over the rest.
     constexpr std::size_t n = hk_tm_frame.size();
     const std::span<const std::byte> header_and_payload =
         as_byte_span(hk_tm_frame).first(n - ccsds::kCrcLen);
@@ -84,12 +72,9 @@ TEST_CASE("crc16 validates a real HK fixture", "[crc][fixture]") {
     REQUIRE(ccsds::crc16(header_and_payload) == expected);
 }
 
-// --- encode / decode smoke tests -----------------------------------------
-//
-// Step 6 just validates the basic shape — Step 7 lands the full conformance
-// battery (corruption, truncation, byte-identical re-encode, ...).
+// --- encode / decode tests -----------------------------------------
 
-TEST_CASE("decode parses the PING TC fixture", "[decode][fixture]") {
+TEST_CASE("decode parses the ping TC fixture", "[decode][fixture]") {
     using namespace ccsds::fixtures;
     const auto pkt = ccsds::decode(as_byte_span(ping_tc_frame));
     REQUIRE(pkt.has_value());
@@ -108,12 +93,11 @@ TEST_CASE("encode produces a CRC-valid frame", "[encode]") {
     p.apid      = ccsds::Apid::CMD;
     p.seq_flags = ccsds::SeqFlags::UNSEGMENTED;
     p.seq_count = 1;
-    p.payload   = {std::byte{0x01}};  // CMD_PING
+    p.payload   = {std::byte{0x01}};
 
     const auto frame = ccsds::encode(p);
     REQUIRE(frame.size() == 9);
 
-    // Decoding our own encode must round-trip cleanly.
     const auto round = ccsds::decode(frame);
     REQUIRE(round.has_value());
     REQUIRE(round->payload == p.payload);

@@ -145,5 +145,3 @@ semaphore.
 The C firmware, Python ground-station, and C++ host-side codecs are
 verified byte-identical against shared conformance vectors (`cpp/tests/`)
 plus 200 differential fixtures generated from the Python reference.
-
-## As soon as I finish my exams, I will add new features to this project

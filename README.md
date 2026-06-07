@@ -1,26 +1,17 @@
 # stm32-ccsds-node
 
-CCSDS Space Packet TM/TC over UART. STM32F411RE + FreeRTOS on one end,
-Python REPL on the other.
+End-to-end CCSDS Space Packet telemetry/telecommand over UART on real STM32 hardware.
 
-End-to-end CCSDS framing on a real MCU, with a ground station.
+STM32F411RE + FreeRTOS firmware emits housekeeping telemetry, accepts telecommands, sends event acknowledgements, and is controlled from a Python ground station. The project is a small satellite-style TM/TC loop: command, telemetry, framing, CRC validation, watchdog-supervised tasks, and host-side tooling.
 
-## C++ Codec, NATS Bridge, and Conformance Testing
+## Project includes
 
-The `cpp/` folder contains a host-side **modern C++20** implementation of
-the CCSDS packet codec, a streaming framer, and a small NATS TM/TC
-bridge. The C firmware codec, Python ground-station codec, and C++ codec
-are tested against shared conformance vectors to verify byte-identical
-behavior for representative TM/TC frames. Tests run under
-**ASan/UBSan** in CI and there is a libFuzzer entry point for the
-decoder and stream framer.
-
-The C++ implementation uses typed packet structures, `enum class`
-APIDs/commands, `std::span`, `std::byte`, `std::optional`, RAII for the
-NATS handles, CMake-based tests via Catch2 + nlohmann/json (FetchContent),
-and GitHub Actions CI.
-
-See [`cpp/DESIGN.md`](cpp/DESIGN.md) for the engineering writeup.
+- Real MCU firmware on STM32F411RE using FreeRTOS tasks for sensing, telemetry, telecommand handling, UART TX, and watchdog supervision.
+- CCSDS Space Packet-style TM/TC over raw UART with CRC-16/CCITT-FALSE and 1-byte-slip resynchronization on CRC failure.
+- Python ground station for sending commands and receiving telemetry from the MCU.
+- Host-side C++20 codec/framer used to verify protocol behavior against the C firmware and Python implementation.
+- Conformance, differential, sanitizer, fuzz, and CI testing for the packet codec/framer.
+- Optional NATS bridge showing how raw TM/TC frames can be connected to pub/sub ground-system tooling.
 
 ## Demo
 
